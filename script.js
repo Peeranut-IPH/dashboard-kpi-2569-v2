@@ -9,7 +9,15 @@
 
   const state = {all:[], filtered:[], category:"ทั้งหมด", page:1, auto:true, timer:null, charts:{}};
   const $ = id => document.getElementById(id);
-  const clean = v => String(v ?? "").replace(/\s+/g," ").trim();
+  const clean = v => String(v ?? "").replace(/\u00a0/g," ").replace(/\s+/g," ").trim();
+  const normalizeCategory = v => {
+    const s = clean(v).toLowerCase().replace(/[–—_-]+/g," ").replace(/\s+/g," ");
+    if (s.includes("agenda")) return "Agenda Base";
+    if (s.includes("function")) return "Function Base";
+    if (s.includes("potential")) return "Potential Base";
+    if (s.includes("ส่วนที่ 2") || s.includes("ยุทธศาสตร์หน่วยงาน")) return "ส่วนที่ 2 ยุทธศาสตร์หน่วยงาน";
+    return clean(v);
+  };
   const escapeHtml = s => clean(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
   const unique = arr => [...new Set(arr.map(clean).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"th"));
   const latestQuarter = row => ["q4","q3","q2","q1"].find(q=>clean(row[q])) || "";
@@ -63,7 +71,7 @@
       if(!res.ok) throw new Error(`HTTP ${res.status}`);
       const json=await res.json();
       if(json.status!=="ok") throw new Error(json.message||"API error");
-      const rows=(json.data||[]).map(compute);
+      const rows=(json.data||[]).map(r=>compute({...r, category:normalizeCategory(r.category)}));
       state.all=rows;
       localStorage.setItem("kpiCache",JSON.stringify({rows,fetched_at:json.fetched_at}));
       setConnection(true,json.fetched_at);
@@ -82,17 +90,20 @@
     renderTabs();
   }
   function fillSelect(el,items,label){
-    const old=el.value; el.innerHTML=`<option value="">${label}</option>`+items.map(x=>`<option>${escapeHtml(x)}</option>`).join(""); el.value=items.includes(old)?old:"";
+    const old=el.value;
+    const emptyText = label.includes("หน่วยงาน") ? "ยังไม่มีข้อมูลหน่วยงานในชีต" : "ยังไม่มีข้อมูลผู้รับผิดชอบในชีต";
+    el.innerHTML=`<option value="">${label}</option>` + (items.length ? items.map(x=>`<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join("") : `<option value="" disabled>${emptyText}</option>`);
+    el.value=items.includes(old)?old:"";
   }
   function renderTabs(){
-    const counts=Object.fromEntries(CATEGORY_ORDER.map(c=>[c,c==="ทั้งหมด"?state.all.length:state.all.filter(x=>clean(x.category)===c).length]));
+    const counts=Object.fromEntries(CATEGORY_ORDER.map(c=>[c,c==="ทั้งหมด"?state.all.length:state.all.filter(x=>normalizeCategory(x.category)===c).length]));
     $("categoryTabs").innerHTML=CATEGORY_ORDER.map(c=>`<button class="cat-btn ${state.category===c?"active":""}" data-cat="${escapeHtml(c)}">${escapeHtml(c)} <span class="count">${counts[c]||0}</span></button>`).join("");
     $("categoryTabs").querySelectorAll("button").forEach(b=>b.onclick=()=>{state.category=b.dataset.cat;state.page=1;renderTabs();renderAll();});
   }
   function applyFilters(){
     const term=clean($("searchInput").value).toLowerCase(), unit=$("unitFilter").value, owner=$("ownerFilter").value, data=$("dataFilter").value;
     state.filtered=state.all.filter(x=>{
-      const catOk=state.category==="ทั้งหมด"||clean(x.category)===state.category;
+      const catOk=state.category==="ทั้งหมด"||normalizeCategory(x.category)===state.category;
       const text=[x.no,x.indicator,x.project,x.unit,x.owner,x.target].map(clean).join(" ").toLowerCase();
       const dataOk=!data||(data==="complete"?x._q:x._status==="pending");
       return catOk&&(!term||text.includes(term))&&(!unit||clean(x.unit)===unit)&&(!owner||clean(x.owner)===owner)&&dataOk;
@@ -121,7 +132,7 @@
     const styles=getComputedStyle(document.documentElement),green=styles.getPropertyValue("--green2").trim(),amber=styles.getPropertyValue("--amber").trim(),gray=styles.getPropertyValue("--gray").trim(),ink=styles.getPropertyValue("--ink").trim(),line=styles.getPropertyValue("--line").trim();
     Chart.defaults.color=ink;Chart.defaults.font.family="'Kanit','Noto Sans Thai',sans-serif";
     chart("donut","donutChart",{type:"doughnut",data:{labels:["บรรลุเป้าหมาย","เฝ้าระวัง","รอข้อมูล"],datasets:[{data:[ach,watch,pending],backgroundColor:[green,amber,gray],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{position:"right"}}}});
-    const cats=CATEGORY_ORDER.slice(1),counts=cats.map(c=>rows.filter(x=>clean(x.category)===c).length);
+    const cats=CATEGORY_ORDER.slice(1),counts=cats.map(c=>rows.filter(x=>normalizeCategory(x.category)===c).length);
     chart("category","categoryChart",{type:"bar",data:{labels:cats.map(x=>x.replace("ส่วนที่ 2 ","ส่วนที่ 2\n")),datasets:[{label:"จำนวนตัวชี้วัด",data:counts,backgroundColor:green,borderRadius:7}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0},grid:{color:line}},x:{grid:{display:false}}}}});
     const qData=["q1","q2","q3","q4"].map(q=>{const vals=rows.map(x=>extractPct(x[q])).filter(v=>v!==null);return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null});
     chart("trend","trendChart",{type:"line",data:{labels:["ไตรมาส 1","ไตรมาส 2","ไตรมาส 3","ไตรมาส 4"],datasets:[{label:"ค่าเฉลี่ยผลการดำเนินงาน (%)",data:qData,borderColor:green,backgroundColor:"rgba(19,162,99,.12)",fill:true,tension:.35,spanGaps:true,pointRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:line}},x:{grid:{display:false}}}}});

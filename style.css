@@ -55,7 +55,8 @@ gap:18px;box-shadow:var(--shadow);min-height:145px}.kpi-card.total{background:li
 .table-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
 .table-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line)}
 .table-head h3{margin:0}.table-wrap{overflow:auto;max-height:610px}table{width:100%;border-collapse:collapse;min-width:1200px}
-th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top;font-size:13px}
+th,td{text-align:left;padding:14px 14px;border-bottom:1px solid var(--line);vertical-align:top;font-size:15px;line-height:1.65}
+th{font-size:14px;white-space:nowrap}td:nth-child(2){min-width:390px;font-size:15.5px}td:nth-child(7){min-width:270px}.table-head h3{font-size:20px}.table-head span{font-size:15px;font-weight:500}
 th{position:sticky;top:0;background:var(--pinkSoft);color:var(--pink);z-index:2;font-weight:600}
 tr:hover td{background:var(--soft)}.type-pill{display:inline-block;padding:4px 9px;border-radius:999px;background:var(--greenSoft);color:var(--green)}
 .progress{display:flex;align-items:center;gap:8px;min-width:130px}.bar{height:9px;background:var(--line);border-radius:99px;flex:1;overflow:hidden}
@@ -77,3 +78,10 @@ border-radius:12px;box-shadow:var(--shadow);opacity:0;transform:translateY(20px)
 .kpi-card{min-height:115px}.kpi-card .number{font-size:40px}.chart-card{min-height:290px}}
 @media print{.sidebar,.actions,.category-tabs,.pagination{display:none!important}.layout{display:block}.header{position:static;box-shadow:none}.table-wrap{max-height:none;overflow:visible}
 body{background:#fff}.panel,.kpi-card,.chart-card,.table-card{box-shadow:none}.app{max-width:none}}
+
+/* V2.1 readability and filter fixes */
+.field input,.field select{font-size:16px;min-height:50px}
+.cat-btn{font-size:16px;font-weight:500;min-height:48px}
+.cat-btn.active{box-shadow:0 9px 22px rgba(8,123,80,.22)}
+.type-pill{font-size:13px;font-weight:500}
+@media(max-width:760px){th,td{font-size:14px;padding:12px 10px}td:nth-child(2){min-width:310px}.field input,.field select{font-size:16px}}
