@@ -5,7 +5,7 @@
   const API_URL = C.API_URL || "";
   const REFRESH_MS = (C.REFRESH_SECONDS || 30) * 1000;
   const PAGE_SIZE = C.PAGE_SIZE || 10;
-  const CACHE_KEY = "kpiCacheV23";
+  const CACHE_KEY = "kpiCacheV24";
 
   const CATEGORY_ORDER = [
     "ทั้งหมด",
@@ -52,6 +52,21 @@
     }
     return clean(v);
   };
+
+  const fallbackCategoryByNo = no => {
+    const m = clean(no).match(/\d+/);
+    if (!m) return "";
+    const n = Number(m[0]);
+    if (n >= 1 && n <= 5) return "Agenda Base";
+    if (n >= 6 && n <= 24) return "Function Base";
+    if (n >= 25 && n <= 29) return "Potential Base";
+    if (n === 30) return "ส่วนที่ 2 ยุทธศาสตร์หน่วยงาน";
+    return "";
+  };
+
+  const categoryForRow = row =>
+    normalizeCategory(row?.category || row?.type || row?.["ประเภท"]) ||
+    fallbackCategoryByNo(row?.no);
 
   const escapeHtml = s => clean(s).replace(/[&<>"']/g, m => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
@@ -161,14 +176,16 @@
 
       state.all = (json.data || []).map(r => ({
         ...r,
-        category: normalizeCategory(r.category || r.type || r["ประเภท"]),
+        category: categoryForRow(r),
         unit: clean(r.unit || r.department || r["หน่วยงาน"]),
         owner: clean(r.owner || r.responsible || r["ผู้รับผิดชอบ"])
       }));
 
-      const knownCategoryCount = state.all.filter(r => CATEGORY_ORDER.includes(r.category) && r.category !== "ทั้งหมด").length;
+      const knownCategoryCount = state.all.filter(r =>
+        CATEGORY_ORDER.includes(r.category) && r.category !== "ทั้งหมด"
+      ).length;
       if (state.all.length && knownCategoryCount === 0) {
-        toast("ยังไม่พบค่าประเภทจากชีต กรุณาอัปเดต Code.gs และ Deploy เป็น New version");
+        throw new Error("พบข้อมูลตัวชี้วัด แต่ยังอ่านคอลัมน์ประเภทไม่ได้");
       }
 
       localStorage.setItem(CACHE_KEY, JSON.stringify({
@@ -192,7 +209,7 @@
         toast("เชื่อมต่อไม่ได้ กำลังแสดงข้อมูลล่าสุดที่บันทึกไว้");
       } else {
         setConnection(false);
-        toast("ไม่สามารถโหลดข้อมูลได้ กรุณาตรวจสอบ Apps Script");
+        toast(`โหลดข้อมูลไม่ได้: ${err.message || "กรุณาตรวจสอบ Apps Script"}`);
       }
     } finally {
       loading(false);
