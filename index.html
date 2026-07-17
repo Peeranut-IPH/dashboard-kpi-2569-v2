@@ -8,11 +8,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2.3">
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script defer src="config.js"></script>
-  <script defer src="script.js"></script>
+  <script defer src="config.js?v=2.3"></script>
+  <script defer src="script.js?v=2.3"></script>
 </head>
 <body>
 <div class="app" id="dashboard">
@@ -37,6 +37,17 @@
   </header>
 
   <nav class="category-tabs" id="categoryTabs"></nav>
+
+  <section class="overview-panel">
+    <div class="overview-head">
+      <div>
+        <h2>จำนวนตัวชี้วัดตามหมวด</h2>
+        <p>แบ่งตามองค์ประกอบการประเมินของแผนปฏิบัติราชการ และแยกข้อมูลตามไตรมาส</p>
+      </div>
+      <div class="quarter-tabs" id="quarterTabs"></div>
+    </div>
+    <div class="category-overview-grid" id="categoryOverview"></div>
+  </section>
 
   <div class="layout">
     <aside class="sidebar">
@@ -86,7 +97,7 @@
           <table>
             <thead><tr>
               <th>รหัส</th><th>ชื่อตัวชี้วัด</th><th>ประเภท</th><th>หน่วยงาน</th><th>ผู้รับผิดชอบ</th>
-              <th>เป้าหมาย</th><th>ผลล่าสุด</th><th>ความก้าวหน้า</th><th>แนวโน้ม</th><th>อัปเดตล่าสุด</th>
+              <th>เป้าหมาย</th><th id="resultHeader">ผลล่าสุด</th><th>ความก้าวหน้า</th><th>แนวโน้ม</th><th>อัปเดตล่าสุด</th>
             </tr></thead>
             <tbody id="kpiBody"></tbody>
           </table>
