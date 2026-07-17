@@ -3,112 +3,163 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>ระบบวิเคราะห์ตัวชี้วัด | โรงพยาบาลกลาง</title>
+  <title>KPI Dashboard V3 Lite | โรงพยาบาลกลาง</title>
   <meta name="description" content="Dashboard ตัวชี้วัดแผนปฏิบัติราชการ โรงพยาบาลกลาง ปีงบประมาณ 2569">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=2.4.1">
-  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css?v=3.0.0">
   <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script defer src="config.js?v=2.4.1"></script>
-  <script defer src="script.js?v=2.4.1"></script>
+  <script defer src="config.js?v=3.0.0"></script>
+  <script defer src="script.js?v=3.0.0"></script>
 </head>
 <body>
-<div class="app" id="dashboard">
-  <header class="header">
-    <div class="brand">
-      <img src="logo.png" alt="โลโก้โรงพยาบาลกลาง">
-      <div>
-        <h1>โรงพยาบาลกลาง<span>KPI Dashboard</span></h1>
-        <p id="appSubtitle">ระบบวิเคราะห์ตัวชี้วัดแผนปฏิบัติราชการ ปีงบประมาณ 2569</p>
-      </div>
-    </div>
-    <div class="head-meta">
-      <div class="meta-box"><b><span id="statusDot" class="status-dot"></span><span id="connectionText">กำลังเชื่อมต่อ</span></b><span id="connectionSub">โปรดรอสักครู่</span></div>
-      <div class="meta-box"><b>อัปเดตล่าสุด</b><span id="lastUpdated">—</span></div>
-    </div>
-    <div class="actions">
-      <button class="btn primary" id="refreshBtn">↻ รีเฟรชข้อมูล</button>
-      <button class="btn green" id="excelBtn">▣ Export Excel</button>
-      <button class="btn primary" id="pdfBtn">▤ Export PDF</button>
-      <button class="btn" id="themeBtn">◐ Dark Mode</button>
-    </div>
-  </header>
-
-  <nav class="category-tabs" id="categoryTabs"></nav>
-
-  <section class="overview-panel">
-    <div class="overview-head">
-      <div>
-        <h2>จำนวนตัวชี้วัดตามหมวด</h2>
-        <p>แบ่งตามองค์ประกอบการประเมินของแผนปฏิบัติราชการ และแยกข้อมูลตามไตรมาส</p>
-      </div>
-      <div class="quarter-tabs" id="quarterTabs"></div>
-    </div>
-    <div class="category-overview-grid" id="categoryOverview"></div>
-  </section>
-
-  <div class="layout">
-    <aside class="sidebar">
-      <section class="panel">
-        <h3 class="panel-title pink-title">⌕ ค้นหาและกรองข้อมูล</h3>
-        <div class="field"><input id="searchInput" placeholder="ค้นหาชื่อตัวชี้วัด..."></div>
-        <div class="field"><select id="unitFilter"><option value="">ทุกหน่วยงาน</option></select></div>
-        <div class="field"><select id="ownerFilter"><option value="">ทุกผู้รับผิดชอบ</option></select></div>
-        <div class="field"><select id="dataFilter"><option value="">ทุกสถานะข้อมูล</option><option value="complete">มีข้อมูลล่าสุด</option><option value="pending">รออัปเดตข้อมูล</option></select></div>
-        <button class="clear-btn" id="clearBtn">≡ ล้างตัวกรอง</button>
-      </section>
-
-      <section class="panel">
-        <div class="toggle-row">
-          <div><b>⟳ การรีเฟรชอัตโนมัติ</b><br><small>ทุก <span id="refreshSeconds">30</span> วินาที</small></div>
-          <div class="toggle on" id="autoToggle" role="switch" aria-checked="true"></div>
+  <div class="page" id="dashboard">
+    <header class="topbar">
+      <div class="brand">
+        <img src="logo.png" alt="โลโก้โรงพยาบาลกลาง">
+        <div class="brand-copy">
+          <div class="brand-line">
+            <h1>ระบบวิเคราะห์ตัวชี้วัด</h1>
+            <span class="version">V3 Lite</span>
+          </div>
+          <p>แผนปฏิบัติราชการ โรงพยาบาลกลาง ปีงบประมาณ 2569</p>
         </div>
-      </section>
+      </div>
 
-      <section class="panel">
-        <h3 class="panel-title">▥ สรุปภาพรวม</h3>
-        <div class="summary-list">
-          <div class="summary-item"><span>จำนวนตัวชี้วัดทั้งหมด</span><b id="sumTotal">0 รายการ</b></div>
-          <div class="summary-item"><span>หน่วยงานที่เกี่ยวข้อง</span><b id="sumUnits">0 หน่วยงาน</b></div>
-          <div class="summary-item"><span>ผู้รับผิดชอบทั้งหมด</span><b id="sumOwners">0 ท่าน</b></div>
-          <div class="summary-item"><span>รออัปเดตข้อมูล</span><b id="sumPending">0 รายการ</b></div>
+      <div class="topbar-right">
+        <div class="connection">
+          <span class="status-dot" id="statusDot"></span>
+          <div>
+            <b id="connectionText">กำลังเชื่อมต่อ</b>
+            <small id="lastUpdated">—</small>
+          </div>
         </div>
-      </section>
-    </aside>
+        <button class="icon-btn" id="refreshBtn" title="รีเฟรชข้อมูล" aria-label="รีเฟรชข้อมูล">↻</button>
+        <button class="outline-btn" id="excelBtn">ส่งออก Excel</button>
+      </div>
+    </header>
 
-    <main class="main">
-      <section class="kpi-grid">
-        <article class="kpi-card total"><div class="kpi-icon">◎</div><div><div class="label">ตัวชี้วัดทั้งหมด</div><div class="number" id="totalCount">0</div><div class="sub">รายการ</div></div></article>
-        <article class="kpi-card"><div class="kpi-icon">↗</div><div><div class="label">บรรลุเป้าหมาย</div><div class="number" id="achievedCount">0</div><div class="sub" id="achievedPct">0%</div></div></article>
-        <article class="kpi-card watch"><div class="kpi-icon">◔</div><div><div class="label">เฝ้าระวัง</div><div class="number" id="watchCount">0</div><div class="sub" id="watchPct">0%</div></div></article>
+    <main>
+      <section class="summary-grid" aria-label="สรุปผล">
+        <article class="summary-card">
+          <span class="summary-label">ตัวชี้วัดทั้งหมด</span>
+          <strong id="totalCount">0</strong>
+          <small>รายการที่แสดง</small>
+        </article>
+        <article class="summary-card success">
+          <span class="summary-label">บรรลุเป้าหมาย</span>
+          <strong id="achievedCount">0</strong>
+          <small id="achievedPct">0%</small>
+        </article>
+        <article class="summary-card warning">
+          <span class="summary-label">เฝ้าระวัง</span>
+          <strong id="watchCount">0</strong>
+          <small id="watchPct">0%</small>
+        </article>
+        <article class="summary-card pending">
+          <span class="summary-label">รอข้อมูล</span>
+          <strong id="pendingCount">0</strong>
+          <small id="pendingPct">0%</small>
+        </article>
       </section>
 
-      <section class="chart-grid">
-        <article class="chart-card"><h3>สรุปสถานะ KPI</h3><div class="chart-wrap"><canvas id="donutChart"></canvas></div></article>
-        <article class="chart-card"><h3>แยกตามประเภทตัวชี้วัด</h3><div class="chart-wrap"><canvas id="categoryChart"></canvas></div></article>
-        <article class="chart-card"><h3>แนวโน้มผลการดำเนินงานรายไตรมาส</h3><div class="chart-wrap"><canvas id="trendChart"></canvas></div></article>
+      <section class="category-section">
+        <div class="section-heading">
+          <div>
+            <h2>จำนวนตัวชี้วัดตามหมวด</h2>
+            <p>คลิกหมวดเพื่อกรองรายการด้านล่าง</p>
+          </div>
+          <span class="uncategorized" id="uncategorizedNotice" hidden></span>
+        </div>
+        <nav class="category-tabs" id="categoryTabs" aria-label="หมวดตัวชี้วัด"></nav>
       </section>
 
-      <section class="table-card">
-        <div class="table-head"><h3>▧ รายการตัวชี้วัด</h3><span id="resultCount">0 รายการ</span></div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr>
-              <th>รหัส</th><th>ชื่อตัวชี้วัด</th><th>ประเภท</th><th>หน่วยงาน</th><th>ผู้รับผิดชอบ</th>
-              <th>เป้าหมาย</th><th id="resultHeader">ผลล่าสุด</th><th>ความก้าวหน้า</th><th>แนวโน้ม</th><th>อัปเดตล่าสุด</th>
-            </tr></thead>
+      <section class="list-section">
+        <div class="list-toolbar">
+          <div class="list-title">
+            <h2>รายการตัวชี้วัด</h2>
+            <span id="resultCount">0 รายการ</span>
+          </div>
+
+          <div class="quick-controls">
+            <label class="search-box">
+              <span>⌕</span>
+              <input id="searchInput" type="search" placeholder="ค้นหาตัวชี้วัด โครงการ หรือรหัส">
+            </label>
+
+            <select id="quarterFilter" aria-label="เลือกไตรมาส">
+              <option value="latest">ผลล่าสุด</option>
+              <option value="q1">ไตรมาส 1</option>
+              <option value="q2">ไตรมาส 2</option>
+              <option value="q3">ไตรมาส 3</option>
+              <option value="q4">ไตรมาส 4</option>
+            </select>
+
+            <details class="more-filter" id="moreFilter">
+              <summary>ตัวกรองเพิ่มเติม</summary>
+              <div class="filter-menu">
+                <label>หน่วยงาน
+                  <select id="unitFilter"><option value="">ทุกหน่วยงาน</option></select>
+                </label>
+                <label>ผู้รับผิดชอบ
+                  <select id="ownerFilter"><option value="">ทุกผู้รับผิดชอบ</option></select>
+                </label>
+                <label>สถานะข้อมูล
+                  <select id="dataFilter">
+                    <option value="">ทุกสถานะข้อมูล</option>
+                    <option value="complete">มีข้อมูล</option>
+                    <option value="pending">รอข้อมูล</option>
+                  </select>
+                </label>
+                <button type="button" class="clear-btn" id="clearBtn">ล้างตัวกรอง</button>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <div class="active-filter-line" id="activeFilterLine"></div>
+
+        <div class="table-shell">
+          <table class="kpi-table">
+            <colgroup>
+              <col class="col-no">
+              <col class="col-indicator">
+              <col class="col-category">
+              <col class="col-target">
+              <col class="col-result">
+              <col class="col-status">
+              <col class="col-detail">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>ลำดับ</th>
+                <th>ชื่อตัวชี้วัด</th>
+                <th>ประเภท</th>
+                <th>เป้าหมาย</th>
+                <th id="resultHeader">ผลล่าสุด</th>
+                <th>สถานะ</th>
+                <th>รายละเอียด</th>
+              </tr>
+            </thead>
             <tbody id="kpiBody"></tbody>
           </table>
-          <div class="empty" id="emptyState" hidden>ไม่พบข้อมูลตามตัวกรองที่เลือก</div>
+          <div class="empty-state" id="emptyState" hidden>
+            ไม่พบข้อมูลตามตัวกรองที่เลือก
+          </div>
         </div>
-        <div class="pagination"><span id="pageInfo">แสดง 0 รายการ</span><div class="pages" id="pages"></div></div>
+
+        <footer class="pagination">
+          <span id="pageInfo">แสดง 0 รายการ</span>
+          <div class="page-buttons" id="pages"></div>
+        </footer>
       </section>
     </main>
   </div>
-</div>
-<div class="loading" id="loading"><div class="spinner"></div></div>
-<div class="toast" id="toast"></div>
+
+  <div class="loading" id="loading" aria-hidden="true">
+    <div class="spinner"></div>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
 </body>
 </html>
